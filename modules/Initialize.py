@@ -1,7 +1,7 @@
 import cv2
 from MACROS import *
 
-def Initialize(img, verbose=False):
+def initialize(img, verbose=False):
     """
     Initialize the image.
 
@@ -15,37 +15,30 @@ def Initialize(img, verbose=False):
     # if verbose:
     #     cv2.imshow("Original", img)
 
-    img = resize(img)
-    img = adjust_contrast(img, ADJUST_CONTRAST_ALPHA, ADJUST_CONTRAST_BETA)
+    img = resize(img, RESIZE_THRESHOLD_PIXEL)
+    # img = adjust_contrast(img, ADJUST_CONTRAST_ALPHA, ADJUST_CONTRAST_BETA)
+    # img = smooth(img, GAUSSIAN_KERNEL_HSIZE, GAUSSIAN_KERNEL_SIGMA)
 
     if verbose:
         cv2.imshow("Adjusted", img)
+        # cv2.waitKey(0)
+
     return img
 
 
 
-def resize(img):
-    """
-    Resize the input image if its height is greater than the RESIZE_THRESHOLD_PIXEL.
-
-    Parameters:
-    img (numpy.ndarray): The input image to be resized.
-
-    Returns:
-    numpy.ndarray: The resized image.
-    """
-    if img.shape[0] > RESIZE_THRESHOLD_PIXEL:
+def resize(img, threshold):
+    if img.shape[0] > threshold:
         img = cv2.resize(img, None, fx=0.2, fy=0.2, interpolation=cv2.INTER_LINEAR)
+        print("Resized to {}x{}".format(img.shape[0], img.shape[1]))
     return img
+
 
 def adjust_contrast(img, alpha=1.0, beta=0):
-    """
-    Adjusts the size, contrast, and brightness of an image.
-    
-    :param img: The original image.
-    :param alpha: The contrast control parameter. The higher the value, the higher the contrast. Default is 1.0.
-    :param beta: The brightness control parameter. The higher the value, the higher the brightness. Default is 0.
-    :return: The adjusted image.
-    """
     adjusted = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
     return adjusted
+
+
+def smooth(img, hsize, sigma):
+    img = cv2.GaussianBlur(img, (hsize, hsize), sigma)
+    return img
