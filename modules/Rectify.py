@@ -1,5 +1,4 @@
 import cv2
-import imutils as im
 import numpy as np
 
 from modules.Hough import hough_longest_line
@@ -11,7 +10,7 @@ def rectify(img, verbose=False):
 
     original = np.copy(img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    binary = binarize(gray)
+    binary = sobel_binarize(gray)
     edge = edge_detection(binary)
 
     contour_flag = False
@@ -45,9 +44,9 @@ def rectify(img, verbose=False):
     # 尝试寻找右侧定位线并进行旋转变换
     try:
         if not contour_flag:
-            line = hough_longest_line(img, edge=edge, verbose=verbose)
+            line = hough_longest_line(img, edge=edge, verbose=False)
         else:
-            line = hough_longest_line(img, verbose=verbose)
+            line = hough_longest_line(img, verbose=False)
         print(line)
 
         angle = line_angle(line) * 180 / np.pi
@@ -55,8 +54,7 @@ def rectify(img, verbose=False):
 
         # TODO: 旋转角度的计算有问题，需要图像中心到直线的的垂向量来进行修正
         # TODO: 旋转后的图像尺寸不对，且超出原尺寸的部分被裁剪掉了
-        rotated = rotate_transform(img, -90 - angle)
-
+        rotated = rotate_transform(img, 90 + angle)
         img = rotated
 
     except Exception as e:
@@ -67,7 +65,6 @@ def rectify(img, verbose=False):
         # cv2.namedWindow("Rectified", cv2.WINDOW_NORMAL)
         cv2.imshow("Rectified", img)
         cv2.imshow("Edge", edge)
-        cv2.waitKey(0)
 
     return img
 

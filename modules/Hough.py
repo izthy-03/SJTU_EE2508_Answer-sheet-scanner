@@ -18,14 +18,14 @@ def hough_longest_line(img, edge=None, verbose=False):
     """
     if edge is None:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        binary = binarize(gray)
+        binary = sobel_binarize(gray)
         edge = edge_detection(binary)
 
     # Find the longest line
-    lines = cv2.HoughLinesP(edge, 1, np.pi / 180, 100, minLineLength=100, maxLineGap=10)
+    lines = cv2.HoughLinesP(edge, 1, np.pi / 180, 100, minLineLength=100, maxLineGap=20)
     if lines is None:
         raise InvalidLineError
-    
+
     if verbose:
         temp = np.copy(img)
         for line in lines:

@@ -1,6 +1,6 @@
 from modules.Initialize import initialize
 from modules.Rectify import rectify
-# from modules.Hough import  *
+from modules.Segment import segment
 import cv2
 
 class answerSheetScanner:
@@ -11,6 +11,8 @@ class answerSheetScanner:
     def process(self):
         tmp1 = initialize(self.img, self.verbose)
         tmp2 = rectify(tmp1, self.verbose)
-        
+        tmp3 = segment(tmp2, self.verbose)
 
+        if self.verbose:
+            cv2.waitKey(0)
         

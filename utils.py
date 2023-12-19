@@ -4,7 +4,7 @@ import imutils as im
 from MACROS import *
 
 
-def binarize(gray):
+def sobel_binarize(gray):
     # Enhence the image with Sobel operator
     h = cv2.Sobel(gray, cv2.CV_32F, 0, 1, -1)
     v = cv2.Sobel(gray, cv2.CV_32F, 1, 0, -1)
@@ -29,10 +29,10 @@ def edge_detection(binary):
     # Do open operation to remove noise
     binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, MORPH_KERNEL)
     kernel = np.ones((1, 1), np.uint8)    
-    # img = cv2.erode(img, kernel, iterations=1)
-    # img = cv2.dilate(img, kernel, iterations=2)
-    # img = cv2.erode(img, kernel, iterations=1)
-    # img = cv2.dilate(img, kernel, iterations=2)
+    # tmp = cv2.erode(binary, kernel, iterations=1)
+    # tmp = cv2.dilate(tmp, kernel, iterations=2)
+    # tmp = cv2.erode(tmp, kernel, iterations=1)
+    # tmp = cv2.dilate(tmp, kernel, iterations=2)
     edge = im.auto_canny(binary)
     # edge = cv2.Canny(img, 50, 150)
     # cv2.imshow("Edge", edge)

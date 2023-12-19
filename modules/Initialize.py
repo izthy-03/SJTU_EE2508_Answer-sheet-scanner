@@ -29,7 +29,10 @@ def initialize(img, verbose=False):
 
 def resize(img, threshold):
     if img.shape[0] > threshold:
-        img = cv2.resize(img, None, fx=0.2, fy=0.2, interpolation=cv2.INTER_LINEAR)
+        # scale = min(threshold / img.shape[0], threshold / img.shape[1])
+        scale = RESIZE_SCALE
+        img = cv2.resize(img, None, fx=scale, fy=scale, 
+                         interpolation=cv2.INTER_LINEAR)
         print("Resized to {}x{}".format(img.shape[0], img.shape[1]))
     return img
 
