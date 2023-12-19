@@ -1,7 +1,7 @@
 import task
 import cv2
 
-imgpath = "./img/1.jpg"
+imgpath = "./img/cam.jpg"
 
 if __name__ == "__main__":
     img = cv2.imread(imgpath)

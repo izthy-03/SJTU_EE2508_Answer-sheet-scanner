@@ -1,12 +1,27 @@
+import cv2
+import numpy as np
+
+
 RESIZE_THRESHOLD_PIXEL = 2000
 
-ADJUST_CONTRAST_ALPHA = 1.8
+ADJUST_CONTRAST_ALPHA = 1.2
 
 ADJUST_CONTRAST_BETA = 0
 
 GAUSSIAN_KERNEL_HSIZE = 3
 GAUSSIAN_KERNEL_SIGMA = 0.5
+GAUSSIAN_KERNEL = (GAUSSIAN_KERNEL_HSIZE, GAUSSIAN_KERNEL_HSIZE), GAUSSIAN_KERNEL_SIGMA
+
+MORPH_KERNEL_SIZE = 2
+MORPH_KERNEL = np.ones((MORPH_KERNEL_SIZE, MORPH_KERNEL_SIZE), np.uint8)
+
+
+
 
 class InvalidContourError(Exception):
     def __str__(self):
         return "Invalid or no contour detected."
+    
+class InvalidLineError(Exception):
+    def __str__(self):
+        return "Invalid or no line detected."

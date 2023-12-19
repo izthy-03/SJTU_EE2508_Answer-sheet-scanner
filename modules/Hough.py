@@ -1,36 +1,50 @@
 import cv2
 import numpy as np
 import imutils as im
+from MACROS import *
+from utils import *
 
-class houghProcessor:
-    def __init__(self, img, binary=None) -> None:
-        self.img = img
-        self.binary = binary if binary is not None else self.binarize()
-        self.edge = self.edge_detection()
+
+def hough_longest_line(img, edge=None, verbose=False):
+    """
+    Find the longest line in the image using Hough transform.
+
+    Parameters:
+    img (numpy.ndarray): The input image.
+    verbose (bool): Whether to show the intermediate results.
+
+    Returns:
+    numpy.ndarray: The longest line in the image.
+    """
+    if edge is None:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        binary = binarize(gray)
+        edge = edge_detection(binary)
+
+    # Find the longest line
+    lines = cv2.HoughLinesP(edge, 1, np.pi / 180, 100, minLineLength=100, maxLineGap=10)
+    if lines is None:
+        raise InvalidLineError
     
-    def binarize(self):
-        """
-        Binarize the input image.
-        """
-        gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-        binary = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-        return binary
-    
+    if verbose:
+        temp = np.copy(img)
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            cv2.line(temp, (x1, y1), (x2, y2), (0, 255, 0), 1)
+        cv2.imshow("Lines", temp)
 
-    def edge_detection(self):
-        """
-        Detect edges of the input image.
-        """
-        kernel = np.ones((1, 1), np.uint8)
-        temp = np.copy(self.img)
-        temp = cv2.erode(temp, kernel, iterations=1)
-        temp = cv2.dilate(temp, kernel, iterations=2)
-        temp = cv2.erode(temp, kernel, iterations=1)
-        temp = cv2.dilate(temp, kernel, iterations=2)
-        temp = im.auto_canny(temp)
-        return temp
+    # Find the longest line
+    longest_line = lines[0]
+    for line in lines:
+        if line_length(line) > line_length(longest_line):
+            longest_line = line
+
+    if verbose:
+        temp = np.copy(img)
+        x1, y1, x2, y2 = longest_line[0]
+        cv2.line(temp, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.imshow("Longest line", temp)
+
+    return longest_line
 
 
-    def process(self):
-        # TODO
-        return None

@@ -1,9 +1,11 @@
 import cv2
 import imutils as im
 import numpy as np
-from modules.Hough import houghProcessor as hp
+
+from modules.Hough import hough_longest_line
+from utils import *
 from MACROS import *
-from utils import sort_rect_nodes
+
 
 def rectify(img, verbose=False):
 
@@ -12,61 +14,74 @@ def rectify(img, verbose=False):
     binary = binarize(gray)
     edge = edge_detection(binary)
 
-    # Find the largest contour
-    contour = get_largest_contour(edge)
-    cv2.drawContours(img, [contour], 0, (0, 255, 0), 1)
+    contour_flag = False
 
-    poly_node_list = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.1, True)
-    if not poly_node_list.shape[0] == 4:
-        print("Cannot find the largest rectangle in the image.")
-        return original
-    
-    poly_node_list = np.float32(sort_rect_nodes(poly_node_list))    
+    # 尝试寻找最大的矩形并进行透视变换
+    try:
+        # Find the largest contour
+        contour = get_largest_contour(edge)
+        if contour is None:
+            raise InvalidContourError
+        temp = np.copy(img)
+        cv2.drawContours(temp, [contour], 0, (0, 255, 0), 1)
+        if verbose:
+            cv2.imshow("Contour", temp)
 
-    # transform the contour region to a rectangle
-    warped = perspective_transform(original, poly_node_list.reshape(4, 2))
+        poly_node_list = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.1, True)
+        if poly_node_list.shape[0] != 4:
+            print("Cannot find the largest rectangle in the image.")
+            raise InvalidContourError
+        
+        poly_node_list = np.float32(sort_rect_nodes(poly_node_list))    
+
+        # transform the contour region to a rectangle
+        warped = perspective_transform(original, poly_node_list)
+        img = warped
+        contour_flag = True
+
+    except Exception as e:
+        print(e)
+
+    # 尝试寻找右侧定位线并进行旋转变换
+    try:
+        if not contour_flag:
+            line = hough_longest_line(img, edge=edge, verbose=verbose)
+        else:
+            line = hough_longest_line(img, verbose=verbose)
+        print(line)
+
+        angle = line_angle(line) * 180 / np.pi
+        print(angle)
+
+        # TODO: 旋转角度的计算有问题，需要图像中心到直线的的垂向量来进行修正
+        # TODO: 旋转后的图像尺寸不对，且超出原尺寸的部分被裁剪掉了
+        rotated = rotate_transform(img, -90 - angle)
+
+        img = rotated
+
+    except Exception as e:
+        print(e)
 
     if verbose:
-        cv2.namedWindow("Rectified", cv2.WINDOW_NORMAL)
-        cv2.imshow("Rectified", warped)
+        # ***可缩放窗口，但是再次运行会保留上次的窗口尺寸
+        # cv2.namedWindow("Rectified", cv2.WINDOW_NORMAL)
+        cv2.imshow("Rectified", img)
+        cv2.imshow("Edge", edge)
         cv2.waitKey(0)
 
     return img
 
-def binarize(img):
-    # Enhence the image with Sobel operator
-    h = cv2.Sobel(img, cv2.CV_32F, 0, 1, -1)
-    v = cv2.Sobel(img, cv2.CV_32F, 1, 0, -1)
-    img = cv2.add(h, v)
-    img = cv2.convertScaleAbs(img, alpha=ADJUST_CONTRAST_ALPHA, beta=ADJUST_CONTRAST_BETA)
-    img = cv2.GaussianBlur(img, (GAUSSIAN_KERNEL_HSIZE, GAUSSIAN_KERNEL_HSIZE), GAUSSIAN_KERNEL_SIGMA)
-    _, binary = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
-    # binary = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-    #                             cv2.THRESH_BINARY, 11, 2)
-    return binary
-
-def edge_detection(img):
-    # Do open operation to remove noise
-    kernel = np.ones((1, 1), np.uint8)
-    img = cv2.erode(img, kernel, iterations=1)
-    img = cv2.dilate(img, kernel, iterations=2)
-    img = cv2.erode(img, kernel, iterations=1)
-    img = cv2.dilate(img, kernel, iterations=2)
-    edge = im.auto_canny(img)
-    # edge = cv2.Canny(img, 50, 150)
-    return edge
-
-def get_largest_contour(img):
+def get_largest_contour(edge):
     """
     Get the largest contour in the given image.
 
     Parameters:
-    img (numpy.ndarray): The input image.
+    edge (numpy.ndarray): The input edge image.
 
     Returns:
     numpy.ndarray: The largest contour in the image.
     """
-    contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     large = max(contours, key=lambda c: cv2.contourArea(c))
     return large
 
@@ -85,7 +100,44 @@ def perspective_transform(img, src):
     numpy.ndarray: The result image.
     """
     h, w = img.shape[:2]
-    dst = np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype=np.float32)
+    dst = np.float32([[0, 0], [w, 0], [0, h], [w, h]])
     M = cv2.getPerspectiveTransform(src, dst)
     warped = cv2.warpPerspective(img, M, (w, h))
     return warped
+
+def rotate_transform(img, angle, center=None):
+    """
+    Apply rotation transform to the input image.
+
+    Parameters:
+    img (numpy.ndarray): The input image.
+    angle (float): The angle to rotate.
+
+    Returns:
+    numpy.ndarray: The result image.
+    """
+    h, w = img.shape[:2]
+    if center is None:
+        center = (w // 2, h // 2)
+    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    rotated = cv2.warpAffine(img, M, (w, h))
+    return rotated
+
+def sort_rect_nodes(nodes):
+    """
+    Sort the nodes of a rectangle in the order of top-left, bottom-left, top-right, bottom-right.
+
+    Parameters:
+    nodes (numpy.ndarray): The nodes of a rectangle.
+
+    Returns:
+    numpy.ndarray: The sorted nodes.
+    """
+    nodes = nodes.reshape(4, 2)
+    nodes = nodes[np.argsort(nodes[:, 1])]
+    if nodes[0][0] > nodes[1][0]:
+        nodes[[0, 1]] = nodes[[1, 0]]
+    if nodes[2][0] > nodes[3][0]:   
+        nodes[[2, 3]] = nodes[[3, 2]]
+
+    return nodes
