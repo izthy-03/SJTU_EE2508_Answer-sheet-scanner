@@ -13,11 +13,14 @@ def rectify(img, verbose=False):
     binary = sobel_binarize(gray)
     edge = edge_detection(binary)
 
+    cv2.imshow("edge to find a4", edge)
+
     contour_flag = False
 
     # 尝试寻找最大的矩形并进行透视变换
     try:
         # Find the largest contour
+        # TODO: Check contour validity
         contour = get_largest_contour(edge)
         if contour is None:
             raise InvalidContourError
@@ -44,18 +47,18 @@ def rectify(img, verbose=False):
     # 尝试寻找右侧定位线并进行旋转变换
     try:
         if not contour_flag:
-            line = hough_longest_line(img, edge=edge, verbose=False)
+            line = hough_longest_line(img, edge=edge, verbose=verbose)
         else:
-            line = hough_longest_line(img, verbose=False)
+            line = hough_longest_line(img, verbose=verbose)
         print(line)
-
+        # TODO: Check line validity
         angle = line_angle(line) * 180 / np.pi
         print(angle)
 
         # TODO: 旋转角度的计算有问题，需要图像中心到直线的的垂向量来进行修正
         # TODO: 旋转后的图像尺寸不对，且超出原尺寸的部分被裁剪掉了
-        rotated = rotate_transform(img, 90 + angle)
-        img = rotated
+        rotated = rotate_transform(img, -90 - angle)
+        # img = rotated
 
     except Exception as e:
         print(e)

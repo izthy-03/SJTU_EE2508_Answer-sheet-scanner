@@ -1,7 +1,7 @@
 import task
 import cv2
 
-imgpath = "./img/cam.jpg"
+imgpath = "./img/good1.jpg"
 
 if __name__ == "__main__":
     img = cv2.imread(imgpath)
@@ -11,5 +11,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(e)
         print("Failed to process the image.")
+        cv2.waitKey(0)
 
     print("Quit.")

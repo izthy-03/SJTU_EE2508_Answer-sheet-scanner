@@ -14,13 +14,18 @@ def segment(img, verbose=False):
 
     bin = binarize_and_enhence(gray)
     locate_line = hough_longest_line(img, edge)
-    # print(locate_line)
+    print(locate_line)
     bin = filter_locate_line(bin, locate_line)
     bin = cv2.morphologyEx(bin, cv2.MORPH_CLOSE, np.ones((3, 3)), iterations=3)
 
     # edge = cv2.Canny(bin, 0, 255)
     edge = im.auto_canny(bin)
-    region_line = hough_longest_line(img, bin, verbose=verbose)
+    x1, y1, x2, y2 = locate_line[0]
+    y_mid = (y1 + y2) // 2
+    len = line_length(locate_line)
+    check = lambda line: line[0][1] < y_mid and line[0][3] < y_mid 
+
+    region_line = hough_longest_line(img, bin, constrain=check, verbose=verbose)
     print(region_line)
     if verbose:
         cv2.imshow("Binary", bin)
@@ -28,13 +33,14 @@ def segment(img, verbose=False):
 
 def binarize_and_enhence(gray):
     # Convert to binary image with OTSU method
-    gray = cv2.convertScaleAbs(gray, alpha=1, beta=0)
-    gray = cv2.GaussianBlur(gray, (3, 3), 0.5)
+    gray = cv2.convertScaleAbs(gray, alpha=1.4, beta=0)
+    gray = cv2.GaussianBlur(gray, (3, 3), 0)
+    gray = cv2.morphologyEx(gray, cv2.MORPH_OPEN, np.ones((3, 3)), iterations=2)
     _, bin = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU)
     bin = ~bin
 
     # Morph open operation to remove noise
-    kernel = np.ones((2, 2), np.uint8)
+    kernel = np.ones((5, 5), np.uint8)
     bin = cv2.morphologyEx(bin, cv2.MORPH_OPEN, kernel)
     return bin
 

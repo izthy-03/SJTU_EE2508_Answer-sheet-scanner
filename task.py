@@ -13,6 +13,7 @@ class answerSheetScanner:
         tmp2 = rectify(tmp1, self.verbose)
         tmp3 = segment(tmp2, self.verbose)
 
+
         if self.verbose:
             cv2.waitKey(0)
         

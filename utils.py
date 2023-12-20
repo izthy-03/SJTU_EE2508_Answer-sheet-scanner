@@ -28,14 +28,14 @@ def edge_detection(binary):
     """
     # Do open operation to remove noise
     binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, MORPH_KERNEL)
-    kernel = np.ones((1, 1), np.uint8)    
+    # kernel = np.ones((1, 1), np.uint8)    
     # tmp = cv2.erode(binary, kernel, iterations=1)
     # tmp = cv2.dilate(tmp, kernel, iterations=2)
     # tmp = cv2.erode(tmp, kernel, iterations=1)
-    # tmp = cv2.dilate(tmp, kernel, iterations=2)
+    # binary = cv2.dilate(tmp, kernel, iterations=2)
     edge = im.auto_canny(binary)
     # edge = cv2.Canny(img, 50, 150)
-    # cv2.imshow("Edge", edge)
+    cv2.imshow("Edge", edge)
 
     return edge
 
