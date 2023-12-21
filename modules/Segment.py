@@ -56,6 +56,7 @@ def segment(img, verbose=False):
     info_bin[region_line_h1[0][1] - 8:, :] = 0
     info_bin[:min(locate_line[0][1], locate_line[0][3]), :] = 0
     answer_bin[:region_line_h1[0][1] + 8, :] = 0
+    answer_bin[region_line_h2[0][1] - 8:, :] = 0
     sheet.info_bin = info_bin
     sheet.answer_bin = answer_bin
 

@@ -15,9 +15,11 @@ MORPH_KERNEL_SIZE = 2
 MORPH_KERNEL = np.ones((MORPH_KERNEL_SIZE, MORPH_KERNEL_SIZE), np.uint8)
 
 LOCATE_LINE_DUTY_THRESH = 0.5
+LOCATE_CONTOURS_NUMBER = 46 + 1
 
 SEGMENT_LOCATE_LINE_THRESH = 0.2
 SEGMENT_REGION_LINE_THRESH = 1
+
 
 class sheetStats:
     def __init__(self) -> None:
@@ -31,6 +33,10 @@ class sheetStats:
         self.answer_bin = None 
         self.locate_bin = None
 
+        self.info_centers = None
+        self.answer_centers = None
+        self.locate_centers = None
+
 class InvalidContourError(Exception):
     def __str__(self):
         return "Invalid or no contour detected."
@@ -42,3 +48,11 @@ class InvalidLineError(Exception):
 class InvalidBoundaryError(Exception):
     def __str__(self):
         return "Invalid boundary."
+    
+class InvalidLocateContourNumberError(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+        self.num = args[0]
+
+    def __str__(self):
+        return "Invalid number of locate contours: %d" % self.num
