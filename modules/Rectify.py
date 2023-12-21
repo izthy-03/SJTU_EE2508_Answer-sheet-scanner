@@ -6,7 +6,7 @@ from utils import *
 from MACROS import *
 
 
-def rectify(img, verbose=False):
+def rectify(img, verbose=False) -> sheetStats:
 
     original = np.copy(img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -45,23 +45,26 @@ def rectify(img, verbose=False):
         print(e)
 
     # 尝试寻找右侧定位线并进行旋转变换
-    try:
-        if not contour_flag:
-            line = hough_longest_line(img, edge=edge, verbose=verbose)
-        else:
-            line = hough_longest_line(img, verbose=verbose)
-        print(line)
-        # TODO: Check line validity
-        angle = line_angle(line) * 180 / np.pi
-        print(angle)
+    # Locate line constraint
+    check = lambda line: line_length(line) > img.shape[0] * LOCATE_LINE_DUTY_THRESH
 
-        # TODO: 旋转角度的计算有问题，需要图像中心到直线的的垂向量来进行修正
-        # TODO: 旋转后的图像尺寸不对，且超出原尺寸的部分被裁剪掉了
-        rotated = rotate_transform(img, -90 - angle)
-        # img = rotated
+    if not contour_flag:
+        line = hough_longest_line(img, edge=edge, constrain=check,verbose=verbose)
+    else:
+        line = hough_longest_line(img, constrain=check, verbose=verbose)
 
-    except Exception as e:
-        print(e)
+    print("Locate line:", line)
+    angle = line_angle(line) * 180 / np.pi
+    print("      angle:", angle)
+
+    if line_length(line) == 0:
+        raise InvalidLineError
+
+    # TODO: 旋转角度的计算有问题，需要图像中心到直线的的垂向量来进行修正
+    # TODO: 旋转后的图像尺寸不对，且超出原尺寸的部分被裁剪掉了
+    rotated = rotate_transform(img, -90 - angle)
+    # img = rotated
+
 
     if verbose:
         # ***可缩放窗口，但是再次运行会保留上次的窗口尺寸

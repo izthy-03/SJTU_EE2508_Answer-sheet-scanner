@@ -12,5 +12,6 @@ if __name__ == "__main__":
         print(e)
         print("Failed to process the image.")
         cv2.waitKey(0)
+        raise e
 
     print("Quit.")
