@@ -47,8 +47,8 @@ def segment(img, verbose=False):
     l, r = find_vertical_boundary(bin, (region_line_h1[0], region_line_h2[0]))
     if l < 0 or r > bin.shape[1]:
         raise InvalidBoundaryError
-    sheet.region_line_v1 = np.array([[l, 0, l, bin.shape[0]]])
-    sheet.region_line_v2 = np.array([[r, 0, r, bin.shape[0]]])
+    sheet.region_line_v1 = np.array([l, 0, l, bin.shape[0]])
+    sheet.region_line_v2 = np.array([r, 0, r, bin.shape[0]])
 
     # Segment the binary image into info and answer regions
     info_bin = np.copy(bin)

@@ -29,7 +29,7 @@ def label(img, sheet: sheetStats, verbose=False):
         cv2.imshow("Label centers", temp)
 
     # print(num_locate)
-    if num_locate != LOCATE_CONTOURS_NUMBER:
+    if (num_locate - 1) != LOCATE_CONTOUR_NUMBER:
         raise InvalidLocateContourNumberError(num_locate)
 
     return sheet

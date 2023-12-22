@@ -3,6 +3,7 @@ from modules.Rectify import rectify
 from modules.Segment import segment
 from modules.Label import label
 from modules.Parse import parse
+from modules.Export import export
 from MACROS import *
 import cv2
 
@@ -19,6 +20,7 @@ class answerSheetScanner():
         self.sheet = segment(tmp2, self.verbose)
         self.sheet = label(tmp2, self.sheet, self.verbose)
         self.sheet = parse(tmp2, self.sheet, self.verbose)
+        export(self.sheet, verbose=self.verbose)
 
         if self.verbose:
             cv2.waitKey(0)

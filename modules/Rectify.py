@@ -84,7 +84,8 @@ def get_largest_contour(edge):
     Returns:
     numpy.ndarray: The largest contour in the image.
     """
-    contours, hierarchy = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # contours, hierarchy = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)
     large = max(contours, key=lambda c: cv2.contourArea(c))
     return large
 
@@ -102,6 +103,7 @@ def perspective_transform(img, src):
     Returns:
     numpy.ndarray: The result image.
     """
+    # TODO: 等比例缩放
     h, w = img.shape[:2]
     dst = np.float32([[0, 0], [w, 0], [0, h], [w, h]])
     M = cv2.getPerspectiveTransform(src, dst)

@@ -15,11 +15,20 @@ MORPH_KERNEL_SIZE = 2
 MORPH_KERNEL = np.ones((MORPH_KERNEL_SIZE, MORPH_KERNEL_SIZE), np.uint8)
 
 LOCATE_LINE_DUTY_THRESH = 0.5
-LOCATE_CONTOURS_NUMBER = 46 + 1
+LOCATE_CONTOUR_NUMBER = 46
+COLUMN_NUMBER = 23
 
 SEGMENT_LOCATE_LINE_THRESH = 0.2
 SEGMENT_REGION_LINE_THRESH = 1
 
+PARSE_ANSWER_BASE = 0
+PARSE_INFO_BASE = 100
+PARSE_SUBJECT_BASE = 1000
+PARSE_SUBJECT = ["数学", "英语", "文综", "理综"]
+
+SCORE_PER_QUESTION = 5
+QUESTION_NUMBER = 40
+EXAM_NUMBER_DIGIT = 11
 
 class sheetStats:
     def __init__(self) -> None:
@@ -36,6 +45,14 @@ class sheetStats:
         self.info_centers = None
         self.answer_centers = None
         self.locate_centers = None
+
+        self.exam_number = dict()
+        self.answers = dict()
+        self.subject = "None"
+
+        self.number = ""
+        self.results = [0] * QUESTION_NUMBER
+        self.score = 0
 
 class InvalidContourError(Exception):
     def __str__(self):
