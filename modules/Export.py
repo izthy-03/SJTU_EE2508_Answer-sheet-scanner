@@ -29,5 +29,5 @@ def export(sheet:sheetStats, verbose=False):
             sheet.results[i] = 0
     sheet.score = SCORE_PER_QUESTION * np.sum(sheet.results)
 
-    if verbose:
-        print(sheet.number, sheet.subject, sheet.score)
+    print(sheet.number, sheet.subject, sheet.score, "pts")
+    return True

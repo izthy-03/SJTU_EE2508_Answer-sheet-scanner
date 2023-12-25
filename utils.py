@@ -35,7 +35,7 @@ def edge_detection(binary):
     # binary = cv2.dilate(tmp, kernel, iterations=2)
     edge = im.auto_canny(binary)
     # edge = cv2.Canny(img, 50, 150)
-    cv2.imshow("Edge", edge)
+    # cv2.imshow("Edge", edge)
 
     return edge
 

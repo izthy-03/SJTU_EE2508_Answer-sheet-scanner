@@ -16,7 +16,7 @@ def segment(img, verbose=False):
 
     bin = binarize_and_enhence(gray)
     locate_line = hough_longest_line(img, edge)
-    print("Locate line", locate_line)
+    print("Locate line", locate_line) if verbose else None
     sheet.locate_line = locate_line
 
     bin, locate_bin = filter_locate_line(bin, locate_line[0])
@@ -33,13 +33,15 @@ def segment(img, verbose=False):
     len = line_length(locate_line)
 
     # Constraints for horizontal region line
-    check1 = lambda line: y_min < line[0][1] < y_mid and y_min < line[0][3] < y_mid and np.abs(line_angle(line)) < 0.1 
-    check2 = lambda line: y_mid < line[0][1] < y_max + len * 0.1 and y_mid < line[0][3] < y_max + len * 0.1 and np.abs(line_angle(line)) < 0.1
+    check1 = lambda line: y_min < line[0][1] < y_mid and y_min < line[0][3] < y_mid and \
+                            np.abs(line_angle(line)) < 0.1 and line_length(line) > len * 0.5
+    check2 = lambda line: y_mid < line[0][1] < y_max + 10 and y_mid < line[0][3] < y_max + 10 and \
+                            np.abs(line_angle(line)) < 0.1 and line_length(line) > len * 0.5
 
     # Find the horizontal region lines
-    region_line_h1 = hough_longest_line(img, bin, constrain=check1, verbose=verbose)
-    region_line_h2 = hough_longest_line(img, bin, constrain=check2, verbose=verbose)
-    print("Horizontal region lines:", region_line_h1, region_line_h2)
+    region_line_h1 = hough_longest_line(img, bin, constrain=check1, maxLineGap=0, verbose=verbose)
+    region_line_h2 = hough_longest_line(img, bin, constrain=check2, maxLineGap=0, verbose=verbose)
+    print("Horizontal region lines:", region_line_h1, region_line_h2) if verbose else None
     sheet.region_line_h1 = region_line_h1[0]
     sheet.region_line_h2 = region_line_h2[0]
 
@@ -47,6 +49,7 @@ def segment(img, verbose=False):
     l, r = find_vertical_boundary(bin, (region_line_h1[0], region_line_h2[0]))
     if l < 0 or r > bin.shape[1]:
         raise InvalidBoundaryError
+        
     sheet.region_line_v1 = np.array([l, 0, l, bin.shape[0]])
     sheet.region_line_v2 = np.array([r, 0, r, bin.shape[0]])
 
@@ -93,7 +96,8 @@ def binarize_and_enhence(gray):
 
 
 def filter_locate_line(bin, locate_line):
-    x1, _, x2, _ = locate_line
+    x1, y1, x2, y2 = locate_line
+    y1, y2 = np.sort([y1, y2])
     column_scan = (x1 + x2) // 2
     # Scan from the locate line to the left
     locate_line_duty = np.sum(bin[:, column_scan])
@@ -106,7 +110,16 @@ def filter_locate_line(bin, locate_line):
     # Filter the locate line
     reverse = np.copy(bin)
     bin[:, column_scan:] = 0
+
     reverse[:, :column_scan] = 0
+    reverse[:y1 - 5, :] = 0
+    reverse[y2 + 5:, :] = 0
+    column_scan = (x1 + x2) // 2
+    while column_scan < bin.shape[1]:
+        if np.sum(reverse[:, column_scan]) < locate_line_duty * SEGMENT_LOCATE_LINE_THRESH:
+            break
+        column_scan += 1
+    reverse[:, column_scan:] = 0
     return bin, reverse
 
 def find_vertical_boundary(bin, horizontal_lines):
@@ -122,8 +135,8 @@ def find_vertical_boundary(bin, horizontal_lines):
 
     while step < left and not bin[y, left - step]:
         step += 1
-    print("Left", left)
-    print("Left step:", step)
+    # print("Left", left) 
+    # print("Left step:", step)
 
     return left - step * 2, right + step * 2
     

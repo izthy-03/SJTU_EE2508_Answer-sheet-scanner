@@ -16,8 +16,8 @@ def initialize(img, verbose=False):
     #     cv2.imshow("Original", img)
 
     img = resize(img, RESIZE_THRESHOLD_PIXEL)
-    img = adjust_contrast(img, ADJUST_CONTRAST_ALPHA, ADJUST_CONTRAST_BETA)
-    img = smooth(img, GAUSSIAN_KERNEL_HSIZE, GAUSSIAN_KERNEL_SIGMA)
+    # img = adjust_contrast(img, ADJUST_CONTRAST_ALPHA, ADJUST_CONTRAST_BETA)
+    # img = smooth(img, GAUSSIAN_KERNEL_HSIZE, GAUSSIAN_KERNEL_SIGMA)
 
     if verbose:
         cv2.imshow("Adjusted", img)
@@ -32,7 +32,7 @@ def resize(img, threshold):
         # scale = min(threshold / img.shape[0], threshold / img.shape[1])
         scale = RESIZE_SCALE
         img = cv2.resize(img, None, fx=scale, fy=scale, 
-                         interpolation=cv2.INTER_LINEAR)
+                         interpolation=cv2.INTER_AREA)
         print("Resized to {}x{}".format(img.shape[0], img.shape[1]))
     return img
 

@@ -5,7 +5,7 @@ from MACROS import *
 from utils import *
 
 
-def hough_longest_line(img, edge=None, constrain:callable=None, verbose=False):
+def hough_longest_line(img, edge=None, constrain:callable=None, verbose=False, maxLineGap=20, minLineGap=20):
     """
     Find the longest line in the image using Hough transform.
 
@@ -22,7 +22,7 @@ def hough_longest_line(img, edge=None, constrain:callable=None, verbose=False):
         edge = edge_detection(binary)
 
     # Find the longest line
-    lines = cv2.HoughLinesP(edge, 1, np.pi / 180, 100, minLineLength=100, maxLineGap=20)
+    lines = cv2.HoughLinesP(edge, 1, np.pi / 180, 100, minLineLength=100, maxLineGap=maxLineGap)
     if lines is None:
         raise InvalidLineError
 
