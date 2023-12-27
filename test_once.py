@@ -1,11 +1,11 @@
 import task
 import cv2
 
-imgpath = "./assets/img/good.jpg"
+imgpath = "./assets/img/good1.jpg"
 
 if __name__ == "__main__":
     img = cv2.imread(imgpath)
-    scanner = task.answerSheetScanner(img, verbose=True)
+    scanner = task.answerSheetScanner(img, verbose=False)
     try:
         scanner.process()
     except Exception as e:

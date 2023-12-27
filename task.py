@@ -20,26 +20,28 @@ class answerSheetScanner():
         self.sheet = segment(tmp2, self.verbose)
         self.sheet = label(tmp2, self.sheet, self.verbose)
         self.sheet = parse(tmp2, self.sheet, self.verbose)
-        export(self.sheet, verbose=self.verbose)
+        self.sheet = export(self.sheet, verbose=self.verbose)
 
-        if self.verbose:
-            cv2.waitKey(0)
+        # if self.verbose:
+        cv2.waitKey(0)
 
 
 class frameBuffer():
-    def __init__(self, rtsp_url) -> None:
+    def __init__(self, video_src) -> None:
         self.mutex = threading.Lock()
-        self.url = rtsp_url
+        self.src = video_src
         self.enable = False
         self.buffer = None
 
     def stream_on(self):
-        self.cap = cv2.VideoCapture(self.url)
+        self.cap = cv2.VideoCapture(self.src)
         self.enable = True
+        cv2.namedWindow('Camera', flags=cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO | cv2.WINDOW_GUI_EXPANDED)
         while self.enable:
             _, img = self.cap.read()
             self.mutex.acquire()
             self.buffer = img
+            cv2.imshow("Camera", img)
             self.mutex.release()
         self.stream_off()
 

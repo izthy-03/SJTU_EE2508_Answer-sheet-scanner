@@ -27,7 +27,8 @@ def edge_detection(binary):
     numpy.ndarray: The edge-detected image.
     """
     # Do open operation to remove noise
-    binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, MORPH_KERNEL)
+    # binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, MORPH_KERNEL)
+    # binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=2)
     # kernel = np.ones((1, 1), np.uint8)    
     # tmp = cv2.erode(binary, kernel, iterations=1)
     # tmp = cv2.dilate(tmp, kernel, iterations=2)
@@ -50,7 +51,10 @@ def line_length(line):
     Returns:
     float: The length of the given line.
     """
-    x1, y1, x2, y2 = line[0]
+    if line is None:
+        return 0
+    
+    x1, y1, x2, y2 = line
     return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
@@ -64,5 +68,7 @@ def line_angle(line):
     Returns:
     float: The angle of the given line.
     """
-    x1, y1, x2, y2 = line[0]
+    if line is None:
+        return 0
+    x1, y1, x2, y2 = line
     return np.arctan2(y2 - y1, x2 - x1)

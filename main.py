@@ -2,24 +2,27 @@ import cv2
 import task
 import threading
 
-rtsp_url = "rtsp://admin:123456@10.180.249.36:8554/live"
-cap = cv2.VideoCapture(rtsp_url)
-# cap = cv2.VideoCapture(0)
+
+# Video source
+video_src = "rtsp://admin:123456@10.180.249.36:8554/live"
+# video_src = 0
 
 
 if __name__ == "__main__":
-    buffer = task.frameBuffer(rtsp_url)
+    # start the buffer thread to get the newest frame
+    buffer = task.frameBuffer(video_src)
     buffer_thread = threading.Thread(target=buffer.stream_on)
     buffer_thread.start()
+    # spin wait until the buffer is ready
     while buffer.get_newest_frame() is None:
         continue
+
+    print("Press q to stop scanning.")
 
     while True:
         # _, img = cap.read()
         img = buffer.get_newest_frame()
-        cv2.namedWindow('Camera', flags=cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO | cv2.WINDOW_GUI_EXPANDED)
-        cv2.imshow("Camera", img)
-        scanner = task.answerSheetScanner(img, verbose=True)
+        scanner = task.answerSheetScanner(img, verbose=False)
         try:
             scanner.process()
             break

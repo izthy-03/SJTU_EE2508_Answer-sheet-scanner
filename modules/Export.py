@@ -30,4 +30,5 @@ def export(sheet:sheetStats, verbose=False):
     sheet.score = SCORE_PER_QUESTION * np.sum(sheet.results)
 
     print(sheet.number, sheet.subject, sheet.score, "pts")
-    return True
+    
+    return sheet

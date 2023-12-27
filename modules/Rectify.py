@@ -11,9 +11,11 @@ def rectify(img, verbose=False) -> sheetStats:
     original = np.copy(img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     binary = sobel_binarize(gray)
-    edge = edge_detection(binary)
+    # edge = edge_detection(binary)
+    edge = edge_detection(gray)
 
     if verbose:
+        cv2.namedWindow("edge to find a4", cv2.WINDOW_NORMAL)
         cv2.imshow("edge to find a4", edge)
 
     contour_flag = False
@@ -22,15 +24,27 @@ def rectify(img, verbose=False) -> sheetStats:
     try:
         # Find the largest contour
         # TODO: Check contour validity
-        contour = get_largest_contour(edge)
-        if contour is None or cv2.contourArea(contour) / (img.shape[0] * img.shape[1]) < CONTOUR_AREA_THRESH:
-            raise InvalidContourError
-        temp = np.copy(img)
-        cv2.drawContours(temp, [contour], 0, (0, 255, 0), 1)
+        contour = get_largest_contour(edge, img=original.copy(), verbose=verbose)
+
         if verbose:
+            temp = np.copy(img)
+            cv2.drawContours(temp, [contour], 0, (0, 255, 0), 3)
+            cv2.namedWindow("Contour", cv2.WINDOW_NORMAL)
             cv2.imshow("Contour", temp)
 
-        poly_node_list = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.1, True)
+        # if contour is None or cv2.contourArea(contour) / (img.shape[0] * img.shape[1]) < CONTOUR_AREA_THRESH:
+        #     raise InvalidContourError
+
+        poly_node_list = cv2.approxPolyDP(contour, cv2.arcLength(contour, False) * 0.1, True)
+        # print(poly_node_list)
+        if verbose:
+            temp = np.copy(img)
+            for point in poly_node_list:
+                cv2.circle(temp, (point[0][0], point[0][1]), 2, (255, 0, 0), 10)
+            cv2.drawContours(temp, [poly_node_list], 0, (0, 255, 0), 2)
+            cv2.namedWindow("Poly", cv2.WINDOW_NORMAL)
+            cv2.imshow("Poly", temp)
+
         if poly_node_list.shape[0] != 4:
             print("Cannot find the largest rectangle in the image.")
             raise InvalidContourError
@@ -60,13 +74,11 @@ def rectify(img, verbose=False) -> sheetStats:
 
     print("Locate line:", line) if verbose else None
 
-    if line_length(line) == 0:
+    if line is None or line_length(line) == 0:
         raise InvalidLineError
 
-    # TODO: 旋转角度的计算有问题，需要图像中心到直线的的垂向量来进行修正
-    # TODO: 旋转后的图像尺寸不对，且超出原尺寸的部分被裁剪掉了
     img_center = np.array([img.shape[1] // 2, img.shape[0] // 2])
-    angle = get_rotate_angle(img_center, line[0])
+    angle = get_rotate_angle(img_center, line)
     if contour_flag:
         candidate = [0, 90, -90, 180, -180]
         angle = min(candidate, key=lambda x: abs(x - angle))
@@ -80,16 +92,18 @@ def rectify(img, verbose=False) -> sheetStats:
     if verbose:
         # ***可缩放窗口，但是再次运行会保留上次的窗口尺寸
         # cv2.namedWindow("Rectified", cv2.WINDOW_NORMAL)
-        temp = np.copy(original)
-        x1, y1, x2, y2 = line[0]
+        temp = np.copy(img)
+        x1, y1, x2, y2 = line
         cv2.line(temp, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.namedWindow("Locate line", cv2.WINDOW_NORMAL)
         cv2.imshow("Locate line", temp)
+        cv2.namedWindow("Rectified", cv2.WINDOW_NORMAL)
         cv2.imshow("Rectified", img)
         cv2.imshow("Edge", edge)
 
     return img
 
-def get_largest_contour(edge):
+def get_largest_contour(edge, img=None, verbose=False):
     """
     Get the largest contour in the given image.
 
@@ -99,10 +113,22 @@ def get_largest_contour(edge):
     Returns:
     numpy.ndarray: The largest contour in the image.
     """
-    # contours, hierarchy = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours, hierarchy = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)
+    contours, hierarchy = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # contours, hierarchy = cv2.findContours(edge, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    # contours, hierarchy = cv2.findContours(edge, cv2.RETR_LIST, cv2.CHAIN_APPROX_TC89_L1)
     large = max(contours, key=lambda c: cv2.contourArea(c))
+    arcmax = max(contours, key=lambda c: cv2.arcLength(c, True))
+
+    if verbose:
+        # print(len(contours))
+        cv2.drawContours(img, contours, -1, (0, 255, 0), 2)
+        cv2.drawContours(img, [large], 0, (0, 0, 255), 3)
+        cv2.drawContours(img, [arcmax], 0, (255, 0, 0), 3)
+        cv2.namedWindow("Contours", cv2.WINDOW_NORMAL)
+        cv2.imshow("Contours", img)
+    # print(large)
     return large
+    # return arcmax
 
 def perspective_transform(img, src):
     """
