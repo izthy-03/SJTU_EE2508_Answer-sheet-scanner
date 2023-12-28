@@ -31,7 +31,8 @@ def parse(img, sheet: sheetStats, verbose=False):
         elif format[row, column] >= PARSE_SUBJECT_BASE:
             sheet.subject = PARSE_SUBJECT[format[row, column] - PARSE_SUBJECT_BASE]
 
-        if verbose:
+        # if verbose:
+        if True:
             cv2.circle(img, (int(centroid[0]), int(centroid[1])), 2, (0, 255, 0), 2)
             cv2.putText(img, str(row_dict[row]), (int(centroid[0]), int(centroid[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
@@ -45,11 +46,13 @@ def parse(img, sheet: sheetStats, verbose=False):
         if PARSE_ANSWER_BASE <= format[row, column] < PARSE_INFO_BASE:
             old = sheet.answers.get(format[row, column] - 1, "")
             sheet.answers[format[row, column] - 1] = old + row_dict[row]
-        if verbose:
+        # if verbose:
+        if True:
             cv2.circle(img, (int(centroid[0]), int(centroid[1])), 2, (0, 255, 0), 2)
             cv2.putText(img, str(row_dict[row]), (int(centroid[0]), int(centroid[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
-    if verbose:
+    # if verbose:
+    if True:
         for i in range(len(locate_x_seq)):
             cv2.line(img, (int(locate_x_seq[i]), 0), (int(locate_x_seq[i]), img.shape[0]), (0, 255, 255), 2)
         for i in range(len(locate_y_seq)):

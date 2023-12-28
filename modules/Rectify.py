@@ -57,7 +57,7 @@ def rectify(img, verbose=False):
             cv2.imshow("Poly", temp)
 
         if poly_node_list.shape[0] != 4:
-            print("Cannot find the largest rectangle in the image.")
+            print("Cannot find the largest rectangle in the image.") if verbose else None
             raise InvalidContourError
         
         poly_node_list = np.float32(sort_rect_nodes(poly_node_list))    
@@ -88,6 +88,14 @@ def rectify(img, verbose=False):
     if line is None or line_length(line) == 0:
         raise InvalidLineError
 
+    if verbose:
+        temp = np.copy(img)
+        x1, y1, x2, y2 = line
+        cv2.line(temp, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.namedWindow("Locate line", cv2.WINDOW_NORMAL)
+        cv2.imshow("Locate line", temp)        
+
+
     img_center = np.array([img.shape[1] // 2, img.shape[0] // 2])
     angle = get_rotate_angle(img_center, line)
     if contour_flag:
@@ -100,15 +108,12 @@ def rectify(img, verbose=False):
     img = rotated
 
     img = cv2.GaussianBlur(img, *GAUSSIAN_KERNEL)
+    # img = cv2.convertScaleAbs(img, alpha=1/ADJUST_CONTRAST_ALPHA * 1.4, beta=0)
 
     if verbose:
         # ***可缩放窗口，但是再次运行会保留上次的窗口尺寸
         # cv2.namedWindow("Rectified", cv2.WINDOW_NORMAL)
         temp = np.copy(img)
-        x1, y1, x2, y2 = line
-        cv2.line(temp, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.namedWindow("Locate line", cv2.WINDOW_NORMAL)
-        cv2.imshow("Locate line", temp)
         cv2.namedWindow("Rectified", cv2.WINDOW_NORMAL)
         cv2.imshow("Rectified", img)
         cv2.imshow("Edge", edge)

@@ -36,12 +36,12 @@ class frameBuffer():
     def stream_on(self):
         self.cap = cv2.VideoCapture(self.src)
         self.enable = True
-        cv2.namedWindow('Camera', flags=cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO | cv2.WINDOW_GUI_EXPANDED)
         while self.enable:
             _, img = self.cap.read()
+            # cv2.namedWindow('Camera', flags=cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO | cv2.WINDOW_GUI_EXPANDED)
+            # cv2.imshow("Camera", img)
             self.mutex.acquire()
             self.buffer = img
-            cv2.imshow("Camera", img)
             self.mutex.release()
         self.stream_off()
 

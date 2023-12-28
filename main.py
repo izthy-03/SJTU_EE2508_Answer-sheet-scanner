@@ -22,6 +22,8 @@ if __name__ == "__main__":
     while True:
         # _, img = cap.read()
         img = buffer.get_newest_frame()
+        cv2.namedWindow('Camera', flags=cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO | cv2.WINDOW_GUI_EXPANDED)
+        cv2.imshow("Camera", img)
         scanner = task.answerSheetScanner(img, verbose=False)
         try:
             scanner.process()
