@@ -28,7 +28,7 @@ def edge_detection(binary):
     """
     # Do open operation to remove noise
     # binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, MORPH_KERNEL)
-    # binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=2)
+    binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, np.ones((5, 5)), iterations=2)
     # kernel = np.ones((1, 1), np.uint8)    
     # tmp = cv2.erode(binary, kernel, iterations=1)
     # tmp = cv2.dilate(tmp, kernel, iterations=2)

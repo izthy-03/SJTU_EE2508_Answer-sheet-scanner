@@ -12,7 +12,8 @@ def segment(img, verbose=False):
 
     original = np.copy(img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    edge = edge_detection(sobel_binarize(gray))
+    # edge = edge_detection(sobel_binarize(gray))
+    edge = edge_detection(gray)
 
     bin = binarize_and_enhence(gray)
     locate_line = hough_longest_line(img, edge)
@@ -39,8 +40,8 @@ def segment(img, verbose=False):
                             np.abs(line_angle(line)) < 0.1 and line_length(line) > len * 0.5
 
     # Find the horizontal region lines
-    region_line_h1 = hough_longest_line(img, bin, constrain=check1, maxLineGap=0, verbose=verbose)
-    region_line_h2 = hough_longest_line(img, bin, constrain=check2, maxLineGap=0, verbose=verbose)
+    region_line_h1 = hough_longest_line(img, bin, constrain=check1, maxLineGap=20, verbose=verbose)
+    region_line_h2 = hough_longest_line(img, bin, constrain=check2, maxLineGap=20, verbose=verbose)
     print("Horizontal region lines:", region_line_h1, region_line_h2) if verbose else None
 
     if region_line_h1 is None and region_line_h2 is None:
@@ -136,16 +137,18 @@ def filter_locate_line(bin, locate_line):
 
 def find_vertical_boundary(bin, horizontal_lines):
     x1, y1, x2, y2 = horizontal_lines[0]
-    x3, _, x4, _ = horizontal_lines[1]
+    x3, y3, x4, y4 = horizontal_lines[1]
     x1, x2, x3, x4 = np.sort([x1, x2, x3, x4])
 
     left, right = x1, x4
-    y = (y1 + y2) // 2
+    y = (y1 + y2) // 2 if np.abs(y1 - y2) < np.abs(y3 - y4) else (y3 + y4) // 2
+    print(left, right, y)
     step = 0
-    while step < left and bin[y, left - step]:
+    scan_line = lambda x: np.sum(bin[y - 5:y + 5, x]) > 0
+    while step < left and scan_line(left - step):
         step += 1
 
-    while step < left and not bin[y, left - step]:
+    while step < left and not scan_line(left - step):
         step += 1
     # print("Left", left) 
     # print("Left step:", step)

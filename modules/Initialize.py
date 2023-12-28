@@ -17,7 +17,7 @@ def initialize(img, verbose=False):
 
     img = resize(img, RESIZE_THRESHOLD_PIXEL)
     img = adjust_contrast(img, ADJUST_CONTRAST_ALPHA, ADJUST_CONTRAST_BETA)
-    img = smooth(img, GAUSSIAN_KERNEL_HSIZE, GAUSSIAN_KERNEL_SIGMA)
+    # img = smooth(img, GAUSSIAN_KERNEL_HSIZE, GAUSSIAN_KERNEL_SIGMA)
 
     if verbose:
         cv2.imshow("Adjusted", img)

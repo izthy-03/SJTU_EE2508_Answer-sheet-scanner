@@ -56,3 +56,42 @@ def hough_longest_line(img, edge=None, constrain:callable=None, verbose=False, m
     return longest_line
 
 
+def hough_intersection(edge, img=None):
+    lines = cv2.HoughLines(edge, 1, np.pi / 180, threshold=100)
+
+    # 画出直线
+    for line in lines:
+        rho, theta = line[0]
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        x1 = int(x0 + 1000 * (-b))
+        y1 = int(y0 + 1000 * (a))
+        x2 = int(x0 - 1000 * (-b))
+        y2 = int(y0 - 1000 * (a))
+        if img is not None:
+            cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+    # 找到交点
+    intersections = []
+    for i in range(len(lines)):
+        for j in range(i + 1, len(lines)):
+            line1 = lines[i][0]
+            line2 = lines[j][0]
+            rho1, theta1 = line1
+            rho2, theta2 = line2
+            A = np.array([[np.cos(theta1), np.sin(theta1)],
+                        [np.cos(theta2), np.sin(theta2)]])
+            b = np.array([rho1, rho2])
+            intersection = np.linalg.solve(A, b)
+            intersections.append(tuple(map(int, intersection)))
+
+    # 在图像上标记交点
+    if img is not None:
+        for point in intersections:
+            cv2.circle(img, point, 5, (0, 255, 0), -1)
+        cv2.namedWindow("Intersections", cv2.WINDOW_NORMAL)
+        cv2.imshow("Intersections", img)
+
+    return intersections

@@ -1,12 +1,12 @@
 import cv2
 import numpy as np
 
-from modules.Hough import hough_longest_line
+from modules.Hough import hough_longest_line, hough_intersection
 from utils import *
 from MACROS import *
 
 
-def rectify(img, verbose=False) -> sheetStats:
+def rectify(img, verbose=False):
 
     original = np.copy(img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -23,7 +23,6 @@ def rectify(img, verbose=False) -> sheetStats:
     # 尝试寻找最大的矩形并进行透视变换
     try:
         # Find the largest contour
-        # TODO: Check contour validity
         contour = get_largest_contour(edge, img=original.copy(), verbose=verbose)
 
         if verbose:
@@ -32,11 +31,23 @@ def rectify(img, verbose=False) -> sheetStats:
             cv2.namedWindow("Contour", cv2.WINDOW_NORMAL)
             cv2.imshow("Contour", temp)
 
-        # if contour is None or cv2.contourArea(contour) / (img.shape[0] * img.shape[1]) < CONTOUR_AREA_THRESH:
-        #     raise InvalidContourError
+        print("Contour area:", cv2.contourArea(contour)) if verbose else None
+        print("Contour perimeter:", cv2.arcLength(contour, True)) if verbose else None
+        contour_area_duty = lambda contour: cv2.contourArea(contour) / (img.shape[0] * img.shape[1])
+        contour_perimeter_duty = lambda contour: cv2.arcLength(contour, False) / (img.shape[0] + img.shape[1]) / 2
 
-        poly_node_list = cv2.approxPolyDP(contour, cv2.arcLength(contour, False) * 0.1, True)
-        # print(poly_node_list)
+        # Check the contour area and perimeter
+        if contour is None or (contour_area_duty(contour) < CONTOUR_AREA_THRESH and contour_perimeter_duty(contour) < CONTOUR_PERIMETER_THRESH):
+            raise InvalidContourError
+
+        poly_node_list = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.1, True)
+        print(poly_node_list) if verbose else None
+        
+        # TODO
+        # temp = original.copy()
+        # intersections = find_contour_intersections(temp, contour, verbose=verbose)
+        # print("Intersections:", intersections) if verbose else None
+
         if verbose:
             temp = np.copy(img)
             for point in poly_node_list:
@@ -88,6 +99,7 @@ def rectify(img, verbose=False) -> sheetStats:
     rotated = dumpRotateImage(img, angle)
     img = rotated
 
+    img = cv2.GaussianBlur(img, *GAUSSIAN_KERNEL)
 
     if verbose:
         # ***可缩放窗口，但是再次运行会保留上次的窗口尺寸
@@ -127,8 +139,20 @@ def get_largest_contour(edge, img=None, verbose=False):
         cv2.namedWindow("Contours", cv2.WINDOW_NORMAL)
         cv2.imshow("Contours", img)
     # print(large)
-    return large
-    # return arcmax
+    # return large
+    return arcmax
+
+
+def find_contour_intersections(img, contour, verbose=False):
+    contour_bin = np.zeros(img.shape[:2], dtype=np.uint8)
+    cv2.drawContours(contour_bin, [contour], 0, 255, 3)
+    debug_img = img if verbose else None
+    intersects = hough_intersection(contour_bin, img=debug_img)
+    if verbose:
+        print("Intersects:", intersects)
+
+    return intersects
+
 
 def perspective_transform(img, src):
     """
@@ -214,7 +238,7 @@ def get_rotate_angle(img_center, line):
 
     # 计算向量与水平线的夹角（弧度）
     # angle_radians = np.arccos(np.dot(normal_vector, np.array([1, 0])) / magnitude)
-    angle_radians = np.angle(normal_vector[0] + normal_vector[1] * 1j)
+    angle_radians = np.angle(1.0*normal_vector[0] + 1.0*normal_vector[1] * 1j)
 
     # 将弧度转换为角度
     angle_degrees = np.degrees(angle_radians)
