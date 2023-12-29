@@ -32,6 +32,7 @@ class frameBuffer():
         self.src = video_src
         self.enable = False
         self.buffer = None
+        self.fps = 30
 
     def stream_on(self):
         self.cap = cv2.VideoCapture(self.src)
@@ -40,6 +41,10 @@ class frameBuffer():
             _, img = self.cap.read()
             # cv2.namedWindow('Camera', flags=cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO | cv2.WINDOW_GUI_EXPANDED)
             # cv2.imshow("Camera", img)
+            # k = cv2.waitKey(1000 // self.fps)
+            # if k == ord('q'):
+            #     break
+
             self.mutex.acquire()
             self.buffer = img
             self.mutex.release()
